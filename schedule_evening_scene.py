@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import astral
 import at
@@ -7,15 +7,11 @@ import pytz
 import spicerack
 import variates
 
-DEVICE = '/dev/ttyUSB0'
-CONFIG_PATH = '/home/homeauto/share/openzwave/config'
-USER_PATH = '/home/homeauto/openzwave'
-OZW_BIN = '/usr/local/bin/ozwsh'
-OZW_CMD = [
-	OZW_BIN,
-	'--device=' + DEVICE,
-	'--config=' + CONFIG_PATH,
-	'--user=' + USER_PATH,
+OZWD_SET_VALUE_BIN = '/usr/local/src/homeauto/ozwd_set_value.py'
+SWITCH_VALUE = 0x100000002494000
+OZWD_SET_VALUE_CMD = [
+	OZWD_SET_VALUE_BIN,
+	'--value=' + '0x{:X}'.format(SWITCH_VALUE),
 ]
 
 today = datetime.date.today()
@@ -32,10 +28,9 @@ off = variates.variate_datetime(
 		max=spicerack.location.solar_noon(tomorrow))
 min_duration = variates.variate_timedelta(
 		mode=datetime.timedelta(hours=2),
-		stdev=datetime.timedelta(minutes=30))
+		stdev=datetime.timedelta(minutes=30),
+		min=datetime.timedelta(0))
 
 if off - on >= min_duration:
-	print('on :', str(on))
-	print('off:', str(off))
-	#at.schedule(on, OZW_CMD + ['on'])
-	#at.schedule(off, OZW_CMD + ['off'])
+	at.schedule(on, OZWD_SET_VALUE_CMD + ['--position=on'])
+	at.schedule(off, OZWD_SET_VALUE_CMD + ['--position=off'])

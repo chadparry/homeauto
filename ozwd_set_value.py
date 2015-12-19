@@ -4,6 +4,7 @@ import argparse
 import contextlib
 import ctypes
 import OpenZWave.RemoteManager
+import OpenZWave.values
 import thrift.protocol.TBinaryProtocol
 import thrift.transport.TSocket
 import thrift.transport.TTransport
@@ -11,10 +12,6 @@ import thrift.transport.TTransport
 OZWD_HOST = 'localhost'
 OZWD_PORT = 9090
 HOME_ID = 0xD501C6D1
-DEFAULT_COMMAND_CLASS_ID = 0x25 # COMMAND_CLASS_SWITCH_BINARY
-DEFAULT_INSTANCE_ID = 1
-DEFAULT_VALUE_INDEX = 0
-DEFAULT_TYPE = OpenZWave.RemoteManager.RemoteValueType.ValueType_Bool
 
 def interpreted_long(x):
 	return long(x, 0)
@@ -38,25 +35,9 @@ args = parser.parse_args()
 if args.value is not None:
 	# This conversion has a reference implementation at
 	# https://github.com/OpenZWave/open-zwave/blob/master/cpp/src/value_classes/ValueID.h.
-	id1 = args.value & 0xFFFFFFFF
-	id2 = args.value >> 32
-	value_id = explicit_value_id = OpenZWave.RemoteManager.RemoteValueID(
-			_homeId=ctypes.c_int32(HOME_ID).value,
-			_nodeId=(args.value & 0xFF000000) >> 24,
-			_genre=(args.value & 0x00C00000) >> 22,
-			_commandClassId=(args.value & 0x003FC000) >> 14,
-			_instance=(args.value & 0xFF00000000000000) >> 56,
-			_valueIndex=(args.value & 0x00000FF0) >> 4,
-			_type=args.value & 0x0000000F)
+	value_id = explicit_value_id = OpenZWave.values.unpackValueID(HOME_ID, args.value)
 if args.node is not None:
-	value_id = computed_value_id = OpenZWave.RemoteManager.RemoteValueID(
-			_homeId=ctypes.c_int32(HOME_ID).value,
-			_nodeId=args.node,
-			_genre=OpenZWave.RemoteManager.RemoteValueGenre.ValueGenre_User,
-			_commandClassId=DEFAULT_COMMAND_CLASS_ID,
-			_instance=DEFAULT_INSTANCE_ID,
-			_valueIndex=DEFAULT_VALUE_INDEX,
-			_type=DEFAULT_TYPE)
+	value_id = computed_value_id = OpenZWave.values.getSwitchValueID(HOME_ID, args.node)
 if args.value is None and args.node is None:
 	raise ValueError('Either the value or node argument needs to be provided')
 if args.value is not None and args.node is not None and explicit_value_id != computed_value_id:

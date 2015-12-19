@@ -13,8 +13,9 @@ def quote_command(args):
 
 def schedule(when, cmd):
 	at = subprocess.Popen(
-			AT_CMD + [when.strftime('%H:%M %d.%m.%Y')],
+			# FIXME: Respect time zones!
+			_AT_CMD + [when.strftime('%H:%M %d.%m.%Y')],
 			stdin=subprocess.PIPE,
 			stderr=subprocess.PIPE)
-	delayed = quote_command(SLEEP_CMD + [when.strftime('%S.%f')]) + '; ' + quote_command(cmd)
+	delayed = quote_command(_SLEEP_CMD + [when.strftime('%S.%f')]) + '; ' + quote_command(cmd)
 	at.communicate(delayed)
