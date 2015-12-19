@@ -3,7 +3,6 @@
 import astral
 import at
 import datetime
-import pytz
 import spicerack
 import variates
 
