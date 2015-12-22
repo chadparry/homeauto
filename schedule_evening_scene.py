@@ -7,10 +7,9 @@ import spicerack
 import variates
 
 OZWD_SET_VALUE_BIN = '/usr/local/src/homeauto/ozwd_set_value.py'
-SWITCH_VALUE = 0x100000002494000
 OZWD_SET_VALUE_CMD = [
 	OZWD_SET_VALUE_BIN,
-	'--value=' + '0x{:X}'.format(SWITCH_VALUE),
+	'--value=' + '0x{:X}'.format(spicerack.values.garage_outlet),
 ]
 
 today = datetime.date.today()
