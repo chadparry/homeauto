@@ -33,8 +33,6 @@ parser.add_argument('--position', choices=['off', 'on'], required=True,
 args = parser.parse_args()
 
 if args.value is not None:
-	# This conversion has a reference implementation at
-	# https://github.com/OpenZWave/open-zwave/blob/master/cpp/src/value_classes/ValueID.h.
 	value_id = explicit_value_id = OpenZWave.values.unpackValueID(HOME_ID, args.value)
 if args.node is not None:
 	value_id = computed_value_id = OpenZWave.values.getSwitchValueID(HOME_ID, args.node)
