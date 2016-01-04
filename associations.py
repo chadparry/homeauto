@@ -16,8 +16,8 @@ with notifications.connection(stomp):
 			try:
 				v = spicerack.Value(int(message.headers['ValueID'], 0))
 			except (KeyError, ValueError):
-				pass
-			print('message:', message.headers, message.body)
+				v = None
+			print('message:', message.headers, message.body, n, v)
 
 """
 ('message:', <Frame {'HomeID': '0xd501c6d1',

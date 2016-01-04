@@ -16,6 +16,7 @@ def subscription(client, destination, ack='auto', conf=None):
 	finally:
 		client.unsubscribe(destination, conf)
 
+@autonumber.unique
 class NotificationType(autonumber.AutoNumber):
 	"""Notification types
 
@@ -56,6 +57,7 @@ class NotificationType(autonumber.AutoNumber):
 	  # Notification::GetEvent returns Driver::ControllerCommand and Notification::GetNotification returns Driver::ControllerState
 	NodeReset = ()  # The Device has been reset and thus removed from the NodeList in OZW
 
+@autonumber.unique
 class NotificationCode(autonumber.AutoNumber):
 	"""Notification codes
 

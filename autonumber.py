@@ -1,4 +1,5 @@
 import enum
+from enum import unique
 
 # This can't be a member because members in an enum are treated magically.
 _AutoNumber_last = {}
