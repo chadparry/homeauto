@@ -24,6 +24,39 @@ class NotificationType(autonumber.AutoNumber):
 	registered with the Manager::AddWatcher method.
 
 	Copied from http://www.openzwave.com/dev/classOpenZWave_1_1Notification.html#a5fa14ba721a25a4c84e0fbbedd767d54."""
+	# An explicit order is required for Python versions before 2.7.8.
+	__order__ = """
+		ValueAdded
+		ValueRemoved
+		ValueChanged
+		ValueRefreshed
+		Group
+		NodeNew
+		NodeAdded
+		NodeRemoved
+		NodeProtocolInfo
+		NodeNaming
+		NodeEvent
+		PollingDisabled
+		PollingEnabled
+		SceneEvent
+		CreateButton
+		DeleteButton
+		ButtonOn
+		ButtonOff
+		DriverReady
+		DriverFailed
+		DriverReset
+		EssentialNodeQueriesComplete
+		NodeQueriesComplete
+		AwakeNodesQueried
+		AllNodesQueriedSomeDead
+		AllNodesQueried
+		Notification
+		DriverRemoved
+		ControllerCommand
+		NodeReset
+	"""
 
 	ValueAdded = 0  # A new node value has been added to OpenZWave's list. These notifications occur after a node has been discovered, and details of its command classes have been received.  Each command class may generate one or more values depending on the complexity of the item being represented.
 	ValueRemoved = ()  # A node value has been removed from OpenZWave's list.  This only occurs when a node is removed.
@@ -65,6 +98,16 @@ class NotificationCode(autonumber.AutoNumber):
 	extra information defined here.
 
 	Copied from http://www.openzwave.com/dev/classOpenZWave_1_1Notification.html#ae1a158109af2e17f8a83101a50809ca3."""
+	# An explicit order is required for Python versions before 2.7.8.
+	__order__ = """
+		MsgComplete
+		Timeout
+		NoOperation
+		Awake
+		Sleep
+		Dead
+		Alive
+	"""
 
 	MsgComplete = 0  # Completed messages
 	Timeout = ()  # Messages that timeout will send a Notification with this code.
