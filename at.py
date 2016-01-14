@@ -1,16 +1,12 @@
 import dateutil.tz
+from six.moves import shlex_quote
 import subprocess
-
-try:
-    from shlex import quote as quote_arg
-except ImportError:
-    from pipes import quote as quote_arg
 
 _AT_CMD = ['/usr/bin/at', '-M']
 _SLEEP_CMD = ['/bin/sleep']
 
 def quote_command(args):
-	return ' '.join(quote_arg(arg) for arg in args)
+	return ' '.join(shlex_quote(arg) for arg in args)
 
 def schedule(when, cmd):
 	local_tzinfo = dateutil.tz.tzlocal()
