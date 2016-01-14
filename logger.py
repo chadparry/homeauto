@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import notifications
+import OpenZWave.values
 import spicerack
 import stompy.simple
 
@@ -17,4 +18,8 @@ with notifications.connection(stomp):
 				value = spicerack.Value(int(message.headers['ValueID'], 0))
 			except (KeyError, ValueError):
 				value = None
-			print('message:', message.headers, message.body, node, value)
+			try:
+				unpacked = OpenZWave.values.unpackValueID(spicerack.home_id, int(message.headers['ValueID'], 0))
+			except (KeyError, ValueError):
+				unpacked = None
+			print('message:', message.headers, message.body, node, value, unpacked)
