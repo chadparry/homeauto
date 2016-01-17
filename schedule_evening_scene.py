@@ -9,7 +9,7 @@ import variates
 OZWD_SET_VALUE_BIN = '/usr/local/src/homeauto/ozwd_set_value.py'
 OZWD_SET_VALUE_CMD = [
 	OZWD_SET_VALUE_BIN,
-	'--value=PORCH_LIGHT',
+	'--value=FRONT_PORCH',
 ]
 
 today = datetime.date.today()
