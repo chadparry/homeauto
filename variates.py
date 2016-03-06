@@ -1,4 +1,5 @@
 import datetime
+import math
 import random
 import time
 
@@ -58,6 +59,24 @@ def right_bounded_variate(mode, stdev, max=None):
 		else:
 			return max - half_bounded_variate(max - mode, stdev)
 
+def _wrapped_exponential_variate(min, max, stdev):
+	if stdev is None:
+		scale = 1
+	elif stdev < 0:
+		raise ValueError('stdev should not be less than zero')
+	elif stdev == 0:
+		return degenerate_variate(mode)
+	elif stdev >= max - min:
+		raise ValueError('stdev should be smaller or the range should be larger')
+	else:
+		unscaled_variance = (stdev / (max - min)) ** 2
+		scale = ((-unscaled_variance**2 + 2*unscaled_variance - 1) / (unscaled_variance**2 - 2*unscaled_variance)) ** 0.5
+	quantile = 1 - random.random()
+	# Use an inverse transform to reshape the distribution.
+	unscaled_variate = -math.log(math.expm1(-2 * math.pi * scale) * quantile + 1) / (2 * math.pi * scale)
+	# Rescale the variate for the caller's convenience.
+	return unscaled_variate * (max - min)
+
 def _beta_pert_params(mode, stretch):
 	mean = (stretch * mode + 1) / (stretch + 2.)
 	if mode == 0.5:
@@ -84,6 +103,10 @@ def bounded_variate(min, max, mode=None, stdev=None):
 		raise ValueError('mode should not be less than min')
 	elif mode > max:
 		raise ValueError('mode should not be more than max')
+	elif min == mode:
+		return min + _wrapped_exponential_variate(min, max, stdev)
+	elif max == mode:
+		return max - _wrapped_exponential_variate(min, max, stdev)
 	else:
 		unscaled_mode = (mode - min) / (max - min)
 	if stdev is None:
@@ -93,7 +116,10 @@ def bounded_variate(min, max, mode=None, stdev=None):
 	elif stdev > 12 ** -0.5 * (max - min):
 		raise ValueError('stdev should be smaller or the range should be larger')
 	elif stdev == 0:
-		return degenerate_variate(mode)
+		if mode is None:
+			return degenerate_variate((min + max) / 2)
+		else:
+			return degenerate_variate(mode)
 	else:
 		import scipy.optimize
 		initial_stretch = 4
