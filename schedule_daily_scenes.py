@@ -2,14 +2,29 @@
 
 import astral
 import at
+import calendar_util
 import datetime
 from six.moves import shlex_quote
 import spicerack
 import variates
 
 OZWD_SET_VALUE_BIN = '/usr/local/src/homeauto/ozwd_set_value.py'
-BEDTIME_WARNING_BIN = '/usr/local/src/homeauto/bedtime_warning.py'
-BEDTIME_BIN = '/usr/local/src/homeauto/bedtime.py'
+PULSE_BIN = '/usr/local/src/homeauto/pulse.py'
+DIM_BIN = '/usr/local/src/homeauto/dim.py'
+
+EXTERIOR_SWITCHES = [
+	spicerack.Value.FRONT_PORCH,
+]
+CHRISTMAS_SWITCHES = [
+	spicerack.Value.GARAGE_OUTLET,
+]
+NIGHTLIGHT_DIMMERS = [
+	spicerack.Value.FRONT_BEDROOM,
+	spicerack.Value.FRONT_FAIRY,
+	spicerack.Value.SIDE_BEDROOM,
+	spicerack.Value.SIDE_FAIRY,
+	spicerack.Value.KIDS_BATHROOM,
+]
 
 today = datetime.date.today()
 tomorrow = today + datetime.timedelta(days=1)
@@ -22,7 +37,7 @@ min_evening_duration = variates.variate_timedelta(
 		stdev=datetime.timedelta(minutes=30),
 		min=datetime.timedelta(0))
 
-def schedule_exterior(value):
+def schedule_switch(value):
 	cmd = [OZWD_SET_VALUE_BIN, '--value={}'.format(shlex_quote(value.name))]
 
 	morning_on = variates.variate_datetime(
@@ -69,19 +84,17 @@ def schedule_nightlight(value):
 			min=spicerack.location.solar_noon(today),
 			max=datetime.datetime.combine(today,
 				datetime.time(hour=20, tzinfo=spicerack.tzinfo)))
-	cmd = [OZWD_SET_VALUE_BIN, '--value={}'.format(shlex_quote(value.name))]
-	at.schedule(morning_off, cmd + ['--position=0'])
-	at.schedule(evening_on, cmd + ['--position=99'])
+	value_arg = '--value={}'.format(shlex_quote(value.name))
+	at.schedule(morning_off, [DIM_BIN, value_arg, '--position=0', '--filter-max=30'])
+	at.schedule(evening_on, [OZWD_SET_VALUE_BIN, value_arg, '--position=99'])
+	at.schedule(datetime.datetime.combine(today, datetime.time(20, 55)), [PULSE_BIN, value_arg])
+	at.schedule(datetime.datetime.combine(today, datetime.time(21)), [DIM_BIN, value_arg, '--position=30', '--filter-min=30'])
 
-schedule_exterior(spicerack.Value.FRONT_PORCH)
-# Enable for Christmas
-#schedule_exterior(spicerack.Value.GARAGE_OUTLET)
-
-schedule_nightlight(spicerack.Value.FRONT_BEDROOM)
-schedule_nightlight(spicerack.Value.FRONT_FAIRY)
-schedule_nightlight(spicerack.Value.SIDE_BEDROOM)
-schedule_nightlight(spicerack.Value.SIDE_FAIRY)
-schedule_nightlight(spicerack.Value.KIDS_BATHROOM)
-
-at.schedule(datetime.datetime.combine(today, datetime.time(20, 55)), [BEDTIME_WARNING_BIN])
-at.schedule(datetime.datetime.combine(today, datetime.time(21)), [BEDTIME_BIN])
+for switch in EXTERIOR_SWITCHES:
+	schedule_switch(switch)
+if (today > calendar_util.get_thanksgiving(today.year) or
+		today <= calendar_util.get_new_years(today.year)):
+	for switch in CHRISTMAS_SWITCHES:
+		schedule_switch(switch)
+for dimmer in NIGHTLIGHT_DIMMERS:
+	schedule_nightlight(dimmer)
