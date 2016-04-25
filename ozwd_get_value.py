@@ -9,10 +9,13 @@ import OpenZWave.RemoteManager
 import OpenZWave.values
 import ozwd_util
 import parsers
+import signal
 import spicerack
 import thrift.protocol.TBinaryProtocol
 import thrift.transport.TSocket
 import thrift.transport.TTransport
+
+REFRESH_TIMEOUT_SEC = 10
 
 GETTERS = {
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Bool: OpenZWave.RemoteManager.Client.GetValueAsBool,
@@ -32,13 +35,20 @@ def escape(s):
 		# Fall back to Python 3 escaping.
 		return bytes(s, 'utf-8').decode('unicode_escape')
 
+def handle_timeout(signum, frame):
+	raise RuntimeError('Failed to receive refresh notification')
+
 def get_value_connected(value, thrift_client, stompy_client):
 	unpacked_value_id = OpenZWave.values.unpackValueID(spicerack.HOME_ID, value)
 
 	# Refresh the cached value.
 	thrift_client.RefreshValue(unpacked_value_id)
+
+	# Create a timeout for an async event.
+	signal.signal(signal.SIGALRM, handle_timeout)
+	signal.alarm(REFRESH_TIMEOUT_SEC)
+
 	# Wait for the async event.
-	# FIXME: Enforce a timeout?
 	while True:
 		message = stompy_client.get()
 		message_type = notifications.NotificationType(
