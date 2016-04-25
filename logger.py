@@ -2,24 +2,35 @@
 
 import notifications
 import OpenZWave.values
+import ozwd_util
 import spicerack
-import stompy.simple
 
-TOPIC = '/topic/zwave/monitor'
+def get_name(value):
+	if value is not None:
+		try:
+			return spicerack.Value(value)
+		except ValueError:
+			pass
+	return None
 
-stomp = stompy.simple.Client()
-with notifications.connection(stomp):
-	with notifications.subscription(stomp, TOPIC):
-		while True:
-			message = stomp.get()
-			node = notifications.NotificationType(
-					int(message.headers['NotificationType'], 0))
-			try:
-				value = spicerack.Value(int(message.headers['ValueID'], 0))
-			except (KeyError, ValueError):
-				value = None
-			try:
-				unpacked = OpenZWave.values.unpackValueID(spicerack.home_id, int(message.headers['ValueID'], 0))
-			except (KeyError, ValueError):
-				unpacked = None
-			print('message:', message.headers, message.body, node, value, unpacked)
+def get_unpacked(value):
+	if value is not None:
+		try:
+			return OpenZWave.values.unpackValueID(spicerack.HOME_ID, value)
+		except ValueError:
+			pass
+	return None
+
+with ozwd_util.get_stompy_client() as stompy_client:
+	while True:
+		message = stompy_client.get()
+		notification = notifications.NotificationType(
+				int(message.headers['NotificationType'], 16))
+		try:
+			value = int(message.headers['ValueID'], 16)
+		except KeyError:
+			# Not all messages are associated with a value.
+			value = None
+		name = get_name(value)
+		unpacked = get_unpacked(value)
+		print('message:', message.headers, message.body, notification, name, unpacked)

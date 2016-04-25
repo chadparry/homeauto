@@ -33,14 +33,16 @@ SETTERS = {
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Button: OpenZWave.RemoteManager.Client.SetValue_Bool,
 }
 
-def set_value(value, position):
-	unpacked_value_id = OpenZWave.values.unpackValueID(spicerack.home_id, value)
+def set_value_connected(value, position, thrift_client):
+	unpacked_value_id = OpenZWave.values.unpackValueID(spicerack.HOME_ID, value)
 	setter = SETTERS[unpacked_value_id._type]
+	success = setter(thrift_client, unpacked_value_id, position)
+	if not success:
+		raise RuntimeError('Failed to set value')
 
-	with ozwd_util.get_client() as client:
-		success = setter(client, unpacked_value_id, position)
-		if not success:
-			raise RuntimeError('Failed to set value')
+def set_value(value, position):
+	with ozwd_util.get_thrift_client() as thrift_client:
+		return set_value_connected(value, position, thrift_client)
 
 def main():
 	parser = argparse.ArgumentParser(description='Control a Z-Wave node')
@@ -50,7 +52,7 @@ def main():
 			help='Desired value position')
 	args = parser.parse_args()
 
-	unpacked_value_id = OpenZWave.values.unpackValueID(spicerack.home_id, args.value)
+	unpacked_value_id = OpenZWave.values.unpackValueID(spicerack.HOME_ID, args.value)
 	parser = PARSERS[unpacked_value_id._type]
 	parsed = parser(args.position)
 

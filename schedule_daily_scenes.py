@@ -8,6 +8,7 @@ from six.moves import shlex_quote
 import spicerack
 import variates
 
+# TODO: Move these scripts to a permanent location.
 OZWD_SET_VALUE_BIN = '/usr/local/src/homeauto/ozwd_set_value.py'
 PULSE_BIN = '/usr/local/src/homeauto/pulse.py'
 DIM_BIN = '/usr/local/src/homeauto/dim.py'

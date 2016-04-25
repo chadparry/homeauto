@@ -1,20 +1,4 @@
 import autonumber
-import contextlib
-import stompy.simple
-
-@contextlib.contextmanager
-def connection(client, username=None, password=None, clientid=None):
-	try:
-		yield client.connect(username, password, clientid)
-	finally:
-		client.disconnect()
-
-@contextlib.contextmanager
-def subscription(client, destination, ack='auto', conf=None):
-	try:
-		yield client.subscribe(destination, ack, conf)
-	finally:
-		client.unsubscribe(destination, conf)
 
 @autonumber.unique
 class NotificationType(autonumber.AutoNumber):
@@ -87,7 +71,7 @@ class NotificationType(autonumber.AutoNumber):
 	Notification = ()  # An error has occured that we need to report.
 	DriverRemoved = ()  # The Driver is being removed. (either due to Error or by request) Do Not Call Any Driver Related Methods after recieving this call
 	ControllerCommand = ()  # When Controller Commands are executed, Notifications of Success/Failure etc are communicated via this Notification
-	  # Notification::GetEvent returns Driver::ControllerCommand and Notification::GetNotification returns Driver::ControllerState
+		# Notification::GetEvent returns Driver::ControllerCommand and Notification::GetNotification returns Driver::ControllerState
 	NodeReset = ()  # The Device has been reset and thus removed from the NodeList in OZW
 
 @autonumber.unique

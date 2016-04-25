@@ -2,31 +2,21 @@
 
 import argparse
 import OpenZWave.values
+import ozwd_get_value
+import ozwd_set_value
 import ozwd_util
 import parsers
 import spicerack
 import sys
 
-def get_level(client, value):
-	unpacked_value_id = OpenZWave.values.unpackValueID(spicerack.home_id, value)
-	result = client.GetValueAsByte(unpacked_value_id)
-	if not result.retval:
-		raise RuntimeError('Failed to get value')
-	return result.o_value
-
-def set_level(client, value, level):
-	unpacked_value_id = OpenZWave.values.unpackValueID(spicerack.home_id, value)
-	success = client.SetValue_UInt8(unpacked_value_id, level)
-	if not success:
-		raise RuntimeError('Failed to set value')
-
 def dim(value, position, filter_min, filter_max):
-	with ozwd_util.get_client() as client:
-		initial = get_level(client, value)
+	with ozwd_util.get_thrift_client() as thrift_client, (
+			ozwd_util.get_stompy_client()) as stompy_client:
+		initial = ozwd_get_value.get_value_connected(value, thrift_client, stompy_client)
 		matched = ((filter_min is None or initial >= filter_min) and
 				(filter_max is None or initial <= filter_max))
 		if matched:
-			set_level(client, value, position)
+			ozwd_set_value.set_value_connected(value, position, thrift_client)
 		return matched
 
 def main():
