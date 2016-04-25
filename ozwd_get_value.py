@@ -47,23 +47,25 @@ def get_value_connected(value, thrift_client, stompy_client):
 	# Create a timeout for an async event.
 	signal.signal(signal.SIGALRM, handle_timeout)
 	signal.alarm(REFRESH_TIMEOUT_SEC)
+	try:
+		# Wait for the async event.
+		while True:
+			message = stompy_client.get()
+			message_type = notifications.NotificationType(
+					int(message.headers['NotificationType'], 16))
+			if message_type != notifications.NotificationType.ValueChanged:
+				continue
+			try:
+				message_value = int(message.headers['ValueID'], 16)
+			except (KeyError, ValueError):
+				continue
+			if message_value != value:
+				continue
 
-	# Wait for the async event.
-	while True:
-		message = stompy_client.get()
-		message_type = notifications.NotificationType(
-				int(message.headers['NotificationType'], 16))
-		if message_type != notifications.NotificationType.ValueChanged:
-			continue
-		try:
-			message_value = int(message.headers['ValueID'], 16)
-		except (KeyError, ValueError):
-			continue
-		if message_value != value:
-			continue
-
-		# The anticipated operation has completed.
-		break
+			# The anticipated operation has completed.
+			break
+	finally:
+		signal.alarm(0)
 
 	# Get the updated value.
 	getter = GETTERS[unpacked_value_id._type]
