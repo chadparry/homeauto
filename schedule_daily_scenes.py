@@ -12,6 +12,7 @@ import variates
 OZWD_SET_VALUE_BIN = '/usr/local/src/homeauto/ozwd_set_value.py'
 PULSE_BIN = '/usr/local/src/homeauto/pulse.py'
 DIM_BIN = '/usr/local/src/homeauto/dim.py'
+NIGHTLIGHT_POSITION = 20
 
 EXTERIOR_SWITCHES = [
 	spicerack.Value.FRONT_PORCH,
@@ -86,10 +87,10 @@ def schedule_nightlight(value):
 			max=datetime.datetime.combine(today,
 				datetime.time(hour=20, tzinfo=spicerack.tzinfo)))
 	value_arg = '--value={}'.format(shlex_quote(value.name))
-	at.schedule(morning_off, [DIM_BIN, value_arg, '--position=0', '--filter-max=30'])
+	at.schedule(morning_off, [DIM_BIN, value_arg, '--position=0', '--filter-max={}'.format(NIGHTLIGHT_POSITION)])
 	at.schedule(evening_on, [OZWD_SET_VALUE_BIN, value_arg, '--position=99'])
 	at.schedule(datetime.datetime.combine(today, datetime.time(20, 55)), [PULSE_BIN, value_arg])
-	at.schedule(datetime.datetime.combine(today, datetime.time(21)), [DIM_BIN, value_arg, '--position=30', '--filter-min=30'])
+	at.schedule(datetime.datetime.combine(today, datetime.time(21)), [DIM_BIN, value_arg, '--position={}'.format(NIGHTLIGHT_POSITION), '--filter-min={}'.format(NIGHTLIGHT_POSITION)])
 
 for switch in EXTERIOR_SWITCHES:
 	schedule_switch(switch)
