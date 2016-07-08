@@ -80,12 +80,13 @@ def schedule_nightlight(value):
 			mode=morning_wake,
 			stdev=datetime.timedelta(hours=1),
 			max=spicerack.location.solar_noon(today))
+	bedtime = datetime.datetime.combine(today,
+			datetime.time(hour=20, tzinfo=spicerack.tzinfo))
 	evening_on = variates.variate_datetime(
-			mode=spicerack.location.sunset(today),
+			mode=min(bedtime, spicerack.location.sunset(today)),
 			stdev=datetime.timedelta(minutes=10),
 			min=spicerack.location.solar_noon(today),
-			max=datetime.datetime.combine(today,
-				datetime.time(hour=20, tzinfo=spicerack.tzinfo)))
+			max=bedtime)
 	value_arg = '--value={}'.format(shlex_quote(value.name))
 	at.schedule(morning_off, [DIM_BIN, value_arg, '--position=0', '--filter-max={}'.format(NIGHTLIGHT_POSITION)])
 	at.schedule(evening_on, [OZWD_SET_VALUE_BIN, value_arg, '--position=99'])
