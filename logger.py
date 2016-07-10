@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import datetime
 import notifications
 import OpenZWave.values
 import ozwd_util
@@ -33,4 +34,4 @@ with ozwd_util.get_stompy_client() as stompy_client:
 			value = None
 		name = get_name(value)
 		unpacked = get_unpacked(value)
-		print('message:', message.headers, message.body, notification, name, unpacked)
+		print('message:', str(datetime.datetime.now()), message.headers, message.body, notification, name, unpacked)
