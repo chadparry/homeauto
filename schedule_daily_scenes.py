@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
+import argparse
 import astral
 import at
 import calendar_util
 import datetime
+import logging
 from six.moves import shlex_quote
 import spicerack
 import variates
+
 
 # TODO: Move these scripts to a permanent location.
 OZWD_SET_VALUE_BIN = '/usr/local/src/homeauto/ozwd_set_value.py'
@@ -28,18 +31,17 @@ NIGHTLIGHT_DIMMERS = [
 	spicerack.Value.KIDS_BATHROOM,
 ]
 
-today = datetime.date.today()
-tomorrow = today + datetime.timedelta(days=1)
-min_morning_duration = variates.variate_timedelta(
-		mode=datetime.timedelta(minutes=30),
-		stdev=datetime.timedelta(minutes=10),
-		min=datetime.timedelta(0))
-min_evening_duration = variates.variate_timedelta(
-		mode=datetime.timedelta(hours=1),
-		stdev=datetime.timedelta(minutes=30),
-		min=datetime.timedelta(0))
 
-def schedule_switch(value):
+def schedule_switch(value, today, dry_run):
+	tomorrow = today + datetime.timedelta(days=1)
+	min_morning_duration = variates.variate_timedelta(
+			mode=datetime.timedelta(minutes=30),
+			stdev=datetime.timedelta(minutes=10),
+			min=datetime.timedelta(0))
+	min_evening_duration = variates.variate_timedelta(
+			mode=datetime.timedelta(hours=1),
+			stdev=datetime.timedelta(minutes=30),
+			min=datetime.timedelta(0))
 	cmd = [OZWD_SET_VALUE_BIN, '--value={}'.format(shlex_quote(value.name))]
 
 	morning_on = variates.variate_datetime(
@@ -70,7 +72,8 @@ def schedule_switch(value):
 		at.schedule(evening_on, cmd + ['--position=on'])
 		at.schedule(evening_off, cmd + ['--position=off'])
 
-def schedule_nightlight(value):
+
+def schedule_nightlight(value, today, dry_run):
 	morning_wake = max(
 		spicerack.location.sunrise(today),
 		spicerack.tzinfo.localize(datetime.datetime.combine(today,
@@ -93,11 +96,27 @@ def schedule_nightlight(value):
 	at.schedule(datetime.datetime.combine(today, datetime.time(20, 55)), [PULSE_BIN, value_arg])
 	at.schedule(datetime.datetime.combine(today, datetime.time(21)), [DIM_BIN, value_arg, '--position={}'.format(NIGHTLIGHT_POSITION), '--filter-min={}'.format(NIGHTLIGHT_POSITION)])
 
-for switch in EXTERIOR_SWITCHES:
-	schedule_switch(switch)
-if (today > calendar_util.get_thanksgiving(today.year) or
-		today <= calendar_util.get_new_years(today.year)):
-	for switch in CHRISTMAS_SWITCHES:
-		schedule_switch(switch)
-for dimmer in NIGHTLIGHT_DIMMERS:
-	schedule_nightlight(dimmer)
+
+def main():
+	parser = argparse.ArgumentParser(description='Schedule Z-Wave scenes for the day')
+	parser.add_argument('-n', '--dry-run', action='store_true',
+			help='Don\'t actually schedule jobs')
+	args = parser.parse_args()
+
+	if args.dry_run:
+		logging.basicConfig(level=logging.DEBUG)
+
+	today = datetime.date.today()
+
+	for switch in EXTERIOR_SWITCHES:
+		schedule_switch(switch, today, args.dry_run)
+	if (today > calendar_util.get_thanksgiving(today.year) or
+			today <= calendar_util.get_new_years(today.year)):
+		for switch in CHRISTMAS_SWITCHES:
+			schedule_switch(switch, today, args.dry_run)
+	for dimmer in NIGHTLIGHT_DIMMERS:
+		schedule_nightlight(dimmer, today, args.dry_run)
+
+
+if __name__ == "__main__":
+	main()
