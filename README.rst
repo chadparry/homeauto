@@ -18,16 +18,16 @@ It is best if you already have a system with a functioning OpenZWave setup.
 The following Python packages need to be present:
 
 * astral
-* dateutil
 * enum
 * six
 * stompy
 * thrift
+* tzlocal
 
 For example, these commands get a system ready::
 
-    sudo apt-get install python-dateutil python-enum34 python-pip python-six python-stompy python-thrift rubygems-integration
-    pip install astral
+    sudo apt-get install python-enum34 python-pip python-six python-stompy python-thrift rubygems-integration
+    pip install astral tzlocal
     gem install stompserver
     git clone https://github.com/OpenZWave/python-openzwave.git
     pushd python-openzwave

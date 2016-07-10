@@ -43,11 +43,11 @@ def schedule_switch(value):
 	cmd = [OZWD_SET_VALUE_BIN, '--value={}'.format(shlex_quote(value.name))]
 
 	morning_on = variates.variate_datetime(
-			mode=datetime.datetime.combine(today,
-				datetime.time(hour=6, minute=30, tzinfo=spicerack.tzinfo)),
+			mode=spicerack.tzinfo.localize(datetime.datetime.combine(today,
+				datetime.time(hour=6, minute=30))),
 			stdev=datetime.timedelta(minutes=10),
-			min=datetime.datetime.combine(today,
-				datetime.time(hour=4, tzinfo=spicerack.tzinfo)))
+			min=spicerack.tzinfo.localize(datetime.datetime.combine(today,
+				datetime.time(hour=4))))
 	morning_off = variates.variate_datetime(
 			mode=spicerack.location.sunrise(today),
 			stdev=datetime.timedelta(minutes=10),
@@ -61,11 +61,11 @@ def schedule_switch(value):
 			stdev=datetime.timedelta(minutes=10),
 			min=spicerack.location.solar_noon(today))
 	evening_off = variates.variate_datetime(
-			mode=datetime.datetime.combine(tomorrow,
-				datetime.time(hour=0, minute=30, tzinfo=spicerack.tzinfo)),
+			mode=spicerack.tzinfo.localize(datetime.datetime.combine(tomorrow,
+				datetime.time(hour=0, minute=30))),
 			stdev=datetime.timedelta(minutes=30),
-			max=datetime.datetime.combine(tomorrow,
-				datetime.time(hour=4, tzinfo=spicerack.tzinfo)))
+			max=spicerack.tzinfo.localize(datetime.datetime.combine(tomorrow,
+				datetime.time(hour=4))))
 	if evening_off - evening_on >= min_evening_duration:
 		at.schedule(evening_on, cmd + ['--position=on'])
 		at.schedule(evening_off, cmd + ['--position=off'])
@@ -73,15 +73,15 @@ def schedule_switch(value):
 def schedule_nightlight(value):
 	morning_wake = max(
 		spicerack.location.sunrise(today),
-		datetime.datetime.combine(today,
-			datetime.time(hour=7, tzinfo=spicerack.tzinfo)))
+		spicerack.tzinfo.localize(datetime.datetime.combine(today,
+			datetime.time(hour=7))))
 	morning_off = variates.variate_datetime(
 			min=morning_wake,
 			mode=morning_wake,
 			stdev=datetime.timedelta(hours=1),
 			max=spicerack.location.solar_noon(today))
-	bedtime = datetime.datetime.combine(today,
-			datetime.time(hour=20, tzinfo=spicerack.tzinfo))
+	bedtime = spicerack.tzinfo.localize(datetime.datetime.combine(today,
+			datetime.time(hour=20)))
 	evening_on = variates.variate_datetime(
 			mode=min(bedtime, spicerack.location.sunset(today)),
 			stdev=datetime.timedelta(minutes=10),
