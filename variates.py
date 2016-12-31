@@ -1,6 +1,8 @@
+import cmath
 import datetime
 import math
 import random
+import scipy.optimize
 import time
 
 def _to_timestamp(when):
@@ -26,9 +28,10 @@ def half_bounded_variate(mode, stdev):
 	elif stdev == 0:
 		return degenerate_variate(mode)
 	else:
-		shape = (mode * (mode**2 + 4 * stdev**2) ** 0.5 +
-				mode**2 + 2 * stdev**2) / (2 * stdev**2)
-		scale = 2 * mode * stdev**2 / (mode * (mode**2 + 4 * stdev**2) ** 0.5 + mode**2)
+		shape = (mode * math.sqrt(mode**2 + 4 * stdev**2) +
+				mode**2 + 2 * stdev**2) / float(2 * stdev**2)
+		scale = (2 * mode * stdev**2 /
+			float(mode * math.sqrt(mode**2 + 4 * stdev**2) + mode**2))
 		return random.gammavariate(shape, scale)
 
 def left_bounded_variate(mode, stdev, min=None):
@@ -59,38 +62,43 @@ def right_bounded_variate(mode, stdev, max=None):
 		else:
 			return max - half_bounded_variate(max - mode, stdev)
 
-def _wrapped_exponential_variate(min, max, stdev):
+def _beta_variate(stdev, scale):
 	if stdev is None:
-		scale = 1
+		beta = 1
 	elif stdev < 0:
 		raise ValueError('stdev should not be less than zero')
 	elif stdev == 0:
-		return degenerate_variate(mode)
-	elif stdev >= max - min:
-		raise ValueError('stdev should be smaller or the range should be larger')
+		return degenerate_variate(mode=0)
 	else:
-		unscaled_variance = (stdev / (max - min)) ** 2
-		scale = ((-unscaled_variance**2 + 2*unscaled_variance - 1) / (unscaled_variance**2 - 2*unscaled_variance)) ** 0.5
-	quantile = 1 - random.random()
-	# Use an inverse transform to reshape the distribution.
-	unscaled_variate = -math.log(math.expm1(-2 * math.pi * scale) * quantile + 1) / (2 * math.pi * scale)
-	# Rescale the variate for the caller's convenience.
-	return unscaled_variate * (max - min)
+		unscaled_variance = (stdev / float(scale)) ** 2
+		if unscaled_variance > (math.sqrt(5) - 1)/float(7 + 3*math.sqrt(5)):
+			raise ValueError('stdev should be smaller or the range should be larger')
+		# This calculates the beta that will provide the requested variance.
+		# The formula was derived by using Wolfram Alpha to invert the variance
+		# definition and then simplifying: http://bit.ly/2iPevsw.
+		term = (-314928*unscaled_variance**3 +
+			(1417176*math.sqrt(5) - 5668704)*unscaled_variance**2)
+		beta = (((term + cmath.sqrt(term**2 -
+			12397455648*unscaled_variance**3*(2*unscaled_variance + 3*math.sqrt(5) -
+			3)**3)) / 2)**(1/3.) / (81*unscaled_variance)).real
+	unscaled_variate = random.betavariate((math.sqrt(5) - 1) / 2., beta)
+	return unscaled_variate * scale
 
 def _beta_pert_params(mode, stretch):
-	mean = (stretch * mode + 1) / (stretch + 2.)
+	mean = (stretch * mode + 1) / float(stretch + 2)
 	if mode == 0.5:
 		alpha = stretch / 2. + 1
 	else:
-		alpha = mean * (2 * mode - 1) / (mode - mean)
-	beta = alpha * (1 / mean - 1)
+		alpha = mean * (2 * mode - 1) / float(mode - mean)
+	beta = alpha * (1 / float(mean) - 1)
 	return (alpha, beta)
 
 def _stretch_err(stretch, mode, stdev):
 	(alpha, beta) = _beta_pert_params(mode, stretch)
 	if alpha <= 1 or beta <= 1:
 		return float('inf')
-	actual = (alpha * beta / ((alpha + beta)**2 * (alpha + beta + 1))) ** 0.5
+	actual = math.sqrt(alpha * beta /
+		float((alpha + beta)**2 * (alpha + beta + 1)))
 	err = abs(actual - stdev)
 	return err
 
@@ -104,26 +112,25 @@ def bounded_variate(min, max, mode=None, stdev=None):
 	elif mode > max:
 		raise ValueError('mode should not be more than max')
 	elif min == mode:
-		return min + _wrapped_exponential_variate(min, max, stdev)
+		return min + _beta_variate(stdev, scale=max - min)
 	elif max == mode:
-		return max - _wrapped_exponential_variate(min, max, stdev)
+		return max - _beta_variate(stdev, scale=max - min)
 	else:
-		unscaled_mode = (mode - min) / (max - min)
+		unscaled_mode = (mode - min) / float(max - min)
 	if stdev is None:
 		stretch = 4
 	elif stdev < 0:
 		raise ValueError('stdev should not be less than zero')
-	elif stdev > 12 ** -0.5 * (max - min):
+	elif stdev > math.sqrt(12) * (max - min):
 		raise ValueError('stdev should be smaller or the range should be larger')
 	elif stdev == 0:
 		if mode is None:
-			return degenerate_variate((min + max) / 2)
+			return degenerate_variate(mode=(min + max) / 2.)
 		else:
 			return degenerate_variate(mode)
 	else:
-		import scipy.optimize
 		initial_stretch = 4
-		unscaled_stdev = stdev / (max - min)
+		unscaled_stdev = stdev / float(max - min)
 		stretch = scipy.optimize.fmin(
 				_stretch_err,
 				initial_stretch,
@@ -137,7 +144,7 @@ def variate(mode=None, stdev=None, min=None, max=None):
 		if mode is None:
 			raise ValueError('Either min, max, or mode should be specified')
 		elif stdev is None:
-			return degenerate_variate(mode=mode)
+			return degenerate_variate(mode)
 		else:
 			return unbounded_variate(mode=mode, stdev=stdev)
 	elif max is None and min is not None:
