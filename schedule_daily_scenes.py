@@ -65,7 +65,7 @@ def schedule_switch(value, today, dry_run):
 	evening_off = variates.variate_datetime(
 			mode=spicerack.tzinfo.localize(datetime.datetime.combine(tomorrow,
 				datetime.time(hour=0, minute=30))),
-			stdev=datetime.timedelta(minutes=30),
+			stdev=datetime.timedelta(minutes=20),
 			max=spicerack.tzinfo.localize(datetime.datetime.combine(tomorrow,
 				datetime.time(hour=4))))
 	if evening_off - evening_on >= min_evening_duration:
@@ -81,8 +81,8 @@ def schedule_nightlight(value, today, dry_run):
 	morning_off = variates.variate_datetime(
 			min=morning_wake,
 			mode=morning_wake,
-			stdev=datetime.timedelta(hours=1),
-			max=spicerack.location.solar_noon(today))
+			stdev=datetime.timedelta(minutes=30),
+			max=max(morning_wake, spicerack.location.solar_noon(today)))
 	bedtime = spicerack.tzinfo.localize(datetime.datetime.combine(today,
 			datetime.time(hour=20)))
 	evening_on = variates.variate_datetime(
@@ -91,14 +91,19 @@ def schedule_nightlight(value, today, dry_run):
 			min=spicerack.location.solar_noon(today),
 			max=bedtime)
 	value_arg = '--value={}'.format(shlex_quote(value.name))
-	at.schedule(morning_off, [DIM_BIN, value_arg, '--position=0', '--filter-max={}'.format(NIGHTLIGHT_POSITION)])
+	at.schedule(morning_off, [DIM_BIN, value_arg, '--position=0',
+		'--filter-max={}'.format(NIGHTLIGHT_POSITION)])
 	at.schedule(evening_on, [OZWD_SET_VALUE_BIN, value_arg, '--position=99'])
-	at.schedule(datetime.datetime.combine(today, datetime.time(20, 55)), [PULSE_BIN, value_arg])
-	at.schedule(datetime.datetime.combine(today, datetime.time(21)), [DIM_BIN, value_arg, '--position={}'.format(NIGHTLIGHT_POSITION), '--filter-min={}'.format(NIGHTLIGHT_POSITION)])
+	at.schedule(datetime.datetime.combine(today, datetime.time(20, 55)),
+		[PULSE_BIN, value_arg])
+	at.schedule(datetime.datetime.combine(today, datetime.time(21)),
+		[DIM_BIN, value_arg, '--position={}'.format(NIGHTLIGHT_POSITION),
+		'--filter-min={}'.format(NIGHTLIGHT_POSITION)])
 
 
 def main():
-	parser = argparse.ArgumentParser(description='Schedule Z-Wave scenes for the day')
+	parser = argparse.ArgumentParser(
+		description='Schedule Z-Wave scenes for the day')
 	parser.add_argument('-n', '--dry-run', action='store_true',
 			help='Don\'t actually schedule jobs')
 	args = parser.parse_args()
