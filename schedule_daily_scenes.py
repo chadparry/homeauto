@@ -55,8 +55,8 @@ def schedule_switch(value, today, dry_run):
 			stdev=datetime.timedelta(minutes=10),
 			max=spicerack.location.solar_noon(today))
 	if morning_off - morning_on >= min_morning_duration:
-		at.schedule(morning_on, cmd + ['--position=on'])
-		at.schedule(morning_off, cmd + ['--position=off'])
+		at.schedule(morning_on, cmd + ['--position=on'], dry_run)
+		at.schedule(morning_off, cmd + ['--position=off'], dry_run)
 
 	evening_on = variates.variate_datetime(
 			mode=spicerack.location.sunset(today),
@@ -69,8 +69,8 @@ def schedule_switch(value, today, dry_run):
 			max=spicerack.tzinfo.localize(datetime.datetime.combine(tomorrow,
 				datetime.time(hour=4))))
 	if evening_off - evening_on >= min_evening_duration:
-		at.schedule(evening_on, cmd + ['--position=on'])
-		at.schedule(evening_off, cmd + ['--position=off'])
+		at.schedule(evening_on, cmd + ['--position=on'], dry_run)
+		at.schedule(evening_off, cmd + ['--position=off'], dry_run)
 
 
 def schedule_nightlight(value, today, dry_run):
@@ -92,13 +92,14 @@ def schedule_nightlight(value, today, dry_run):
 			max=bedtime)
 	value_arg = '--value={}'.format(shlex_quote(value.name))
 	at.schedule(morning_off, [DIM_BIN, value_arg, '--position=0',
-		'--filter-max={}'.format(NIGHTLIGHT_POSITION)])
-	at.schedule(evening_on, [OZWD_SET_VALUE_BIN, value_arg, '--position=99'])
+		'--filter-max={}'.format(NIGHTLIGHT_POSITION)], dry_run)
+	at.schedule(evening_on, [OZWD_SET_VALUE_BIN, value_arg, '--position=99'],
+		dry_run)
 	at.schedule(datetime.datetime.combine(today, datetime.time(20, 55)),
-		[PULSE_BIN, value_arg])
+		[PULSE_BIN, value_arg], dry_run)
 	at.schedule(datetime.datetime.combine(today, datetime.time(21)),
 		[DIM_BIN, value_arg, '--position={}'.format(NIGHTLIGHT_POSITION),
-		'--filter-min={}'.format(NIGHTLIGHT_POSITION)])
+		'--filter-min={}'.format(NIGHTLIGHT_POSITION)], dry_run)
 
 
 def main():
