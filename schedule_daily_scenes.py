@@ -23,13 +23,13 @@ EXTERIOR_SWITCHES = [
 CHRISTMAS_SWITCHES = [
 	spicerack.Value.GARAGE_OUTLET,
 ]
-NIGHTLIGHT_DIMMERS = [
-	spicerack.Value.FRONT_BEDROOM,
-	spicerack.Value.FRONT_FAIRY,
-	spicerack.Value.SIDE_BEDROOM,
-	spicerack.Value.SIDE_FAIRY,
-	spicerack.Value.KIDS_BATHROOM,
-]
+NIGHTLIGHT_DIMMERS = {
+	spicerack.Value.FRONT_BEDROOM: None,
+	spicerack.Value.FRONT_FAIRY: None,
+	spicerack.Value.SIDE_BEDROOM: None,
+	spicerack.Value.SIDE_FAIRY: None,
+	spicerack.Value.KIDS_BATHROOM: spicerack.Value.KIDS_BATHROOM_DIMMER_RAMP_TIME,
+}
 
 
 def schedule_switch(value, today, dry_run):
@@ -73,7 +73,7 @@ def schedule_switch(value, today, dry_run):
 		at.schedule(evening_off, cmd + ['--position=off'], dry_run)
 
 
-def schedule_nightlight(value, today, dry_run):
+def schedule_nightlight(value, today, dry_run, dimmer_ramp_time_value=None):
 	morning_wake = max(
 		spicerack.location.sunrise(today),
 		spicerack.tzinfo.localize(datetime.datetime.combine(today,
@@ -95,8 +95,12 @@ def schedule_nightlight(value, today, dry_run):
 		'--filter-max={}'.format(NIGHTLIGHT_POSITION)], dry_run)
 	at.schedule(evening_on, [OZWD_SET_VALUE_BIN, value_arg, '--position=99'],
 		dry_run)
+	pulse_args = [PULSE_BIN, value_arg]
+	if dimmer_ramp_time_value is not None:
+		pulse_args.append('--dimmer-ramp-time-value={}'.format(
+				shlex_quote(dimmer_ramp_time_value.name)))
 	at.schedule(datetime.datetime.combine(today, datetime.time(20, 55)),
-		[PULSE_BIN, value_arg], dry_run)
+		pulse_args, dry_run)
 	at.schedule(datetime.datetime.combine(today, datetime.time(21)),
 		[DIM_BIN, value_arg, '--position={}'.format(NIGHTLIGHT_POSITION),
 		'--filter-min={}'.format(NIGHTLIGHT_POSITION)], dry_run)
@@ -120,8 +124,8 @@ def main():
 			today <= calendar_util.get_new_years(today.year)):
 		for switch in CHRISTMAS_SWITCHES:
 			schedule_switch(switch, today, args.dry_run)
-	for dimmer in NIGHTLIGHT_DIMMERS:
-		schedule_nightlight(dimmer, today, args.dry_run)
+	for (dimmer, dimmer_ramp_time_value) in NIGHTLIGHT_DIMMERS.iteritems():
+		schedule_nightlight(dimmer, today, args.dry_run, dimmer_ramp_time_value)
 
 
 if __name__ == "__main__":
