@@ -3,7 +3,6 @@
 from __future__ import print_function
 
 import argparse
-import contextlib
 import notifications
 import OpenZWave.RemoteManager
 import OpenZWave.values

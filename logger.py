@@ -7,6 +7,10 @@ import OpenZWave.values
 import ozwd_util
 import spicerack
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
+
 def get_name(value):
 	if value is not None:
 		try:
@@ -35,4 +39,4 @@ with ozwd_util.get_stompy_client() as stompy_client:
 			value = None
 		name = get_name(value)
 		unpacked = get_unpacked(value)
-		logging.info('message at %s: %s, %s, %s, %s, %s', str(datetime.datetime.now()), message.headers, message.body, notification, name, unpacked)
+		logger.info('message at %s: %s, %s, %s, %s, %s', str(datetime.datetime.now()), message.headers, message.body, notification, name, unpacked)
