@@ -20,6 +20,9 @@ NIGHTLIGHT_POSITION = 20
 EXTERIOR_SWITCHES = [
 	spicerack.Value.FRONT_PORCH,
 ]
+HALLOWEEN_SWITCHES = [
+	spicerack.Value.GARAGE_OUTLET,
+]
 CHRISTMAS_SWITCHES = [
 	spicerack.Value.GARAGE_OUTLET,
 ]
@@ -120,6 +123,10 @@ def main():
 
 	for switch in EXTERIOR_SWITCHES:
 		schedule_switch(switch, today, args.dry_run)
+	if (today >= calendar_util.get_autumnal_equinox(today.year) and
+			today <= calendar_util.get_halloween(today.year)):
+		for switch in HALLOWEEN_SWITCHES:
+			schedule_switch(switch, today, args.dry_run)
 	if (today > calendar_util.get_thanksgiving(today.year) or
 			today <= calendar_util.get_new_years(today.year)):
 		for switch in CHRISTMAS_SWITCHES:
