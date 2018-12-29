@@ -35,7 +35,7 @@ def get_value_details(value, thrift_client):
 	help_text = thrift_client.GetValueHelp(safe_value)
 	return ValueDetails(
             packed_value,
-            unpacked_value_id._homeId,
+            ctypes.c_uint32(unpacked_value_id._homeId).value,
             unpacked_value_id._nodeId,
             unpacked_value_id._genre,
             unpacked_value_id._commandClassId,
