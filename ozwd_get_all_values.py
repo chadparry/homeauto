@@ -17,23 +17,34 @@ import time
 
 
 NodeDetails = collections.namedtuple('NodeDetails', ['home_id', 'node_id', 'name', 'location', 'product', 'manufacturer', 'values'])
-ValueDetails = collections.namedtuple('ValueDetails', ['home_id', 'node_id', 'genre', 'command_class_id', 'instance', 'value_index', 'type', 'label', 'help_text'])
+ValueDetails = collections.namedtuple('ValueDetails', ['value_id', 'home_id', 'node_id', 'genre', 'command_class_id', 'instance', 'value_index', 'type', 'label', 'help_text'])
 
 
 def get_value_details(value, thrift_client):
-	# RemoteValueID(_type=7, _instance=1L, _valueIndex=2, _nodeId=7, _commandClassId=134, _homeId=-721303855, _genre=3)
+        (packed_value, unpacked_value_id) = value
 	safe_value = OpenZWave.RemoteManager.RemoteValueID(
-		value._homeId,
-		ctypes.c_byte(value._nodeId).value,
-		value._genre,
-		ctypes.c_byte(value._commandClassId).value,
-		ctypes.c_byte(value._instance).value,
-		ctypes.c_byte(value._valueIndex).value,
-		value._type,
+		unpacked_value_id._homeId,
+		ctypes.c_byte(unpacked_value_id._nodeId).value,
+		unpacked_value_id._genre,
+		ctypes.c_byte(unpacked_value_id._commandClassId).value,
+		ctypes.c_byte(unpacked_value_id._instance).value,
+		ctypes.c_byte(unpacked_value_id._valueIndex).value,
+		unpacked_value_id._type,
 	)
 	label = thrift_client.GetValueLabel(safe_value)
 	help_text = thrift_client.GetValueHelp(safe_value)
-	return ValueDetails(value._homeId, value._nodeId, value._genre, value._commandClassId, value._instance, value._valueIndex, value._type, label, help_text)
+	return ValueDetails(
+            packed_value,
+            unpacked_value_id._homeId,
+            unpacked_value_id._nodeId,
+            unpacked_value_id._genre,
+            unpacked_value_id._commandClassId,
+            unpacked_value_id._instance,
+            unpacked_value_id._valueIndex,
+            unpacked_value_id._type,
+            label,
+            help_text,
+        )
 
 
 def get_node_details(home_id, node_id, values, thrift_client):
@@ -65,9 +76,9 @@ def get_all_values_connected(thrift_client, stompy_client):
 			#	continue
 			try:
 				home_id = int(message.headers['HomeID'], 16)
-				message_value = int(message.headers['ValueID'], 16)
-				unpacked_value_id = OpenZWave.values.unpackValueID(home_id, message_value)
-				values.add(unpacked_value_id)
+				packed_value = int(message.headers['ValueID'], 16)
+				unpacked_value_id = OpenZWave.values.unpackValueID(home_id, packed_value)
+				values.add((packed_value, unpacked_value_id))
 			except (KeyError, ValueError):
 				continue
 			# FIXME: Add an event parameter that counts the values so we know when to stop.
@@ -81,7 +92,7 @@ def get_all_values_connected(thrift_client, stompy_client):
 			else:
 				break
 
-	by_node_id = lambda value: (value._homeId, value._nodeId)
+	by_node_id = lambda value: (value[1]._homeId, value[1]._nodeId)
 	nodes = itertools.groupby(sorted(values, key=by_node_id), by_node_id)
 	details = [get_node_details(home_id, node_id, values, thrift_client) for ((home_id, node_id), values) in nodes]
 	return details
