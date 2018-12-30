@@ -107,7 +107,7 @@ def get_all_nodes_connected(thrift_client, stompy_client):
 
 def get_all_node_details(nodes):
 	queue = Queue.Queue()
-	threads = [threading.Thread(target=collect_node_details, args=(home_id, node_id, values, queue))
+	threads = [threading.Thread(target=collect_node_details, args=(home_id, node_id, list(values), queue))
 		for ((home_id, node_id), values) in nodes]
 	for thread in threads:
 		thread.start()
