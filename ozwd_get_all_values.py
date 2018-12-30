@@ -49,17 +49,24 @@ def get_value_details(value, thrift_client):
         )
 
 
-def get_node_details(home_id, node_id, values, thrift_client):
-	name = thrift_client.GetNodeName(home_id, node_id)
-	location = thrift_client.GetNodeLocation(home_id, node_id)
-	product = thrift_client.GetNodeProductName(home_id, node_id)
-	manufacturer = thrift_client.GetNodeManufacturerName(home_id, node_id)
-	return NodeDetails(home_id, node_id, name, location, product, manufacturer, [get_value_details(value, thrift_client) for value in values])
+def get_node_details(home_id, node_id, thrift_client):
+	home_id_signed = ctypes.c_int32(home_id).value
+	name = thrift_client.GetNodeName(home_id_signed, node_id)
+	location = thrift_client.GetNodeLocation(home_id_signed, node_id)
+	product = thrift_client.GetNodeProductName(home_id_signed, node_id)
+	manufacturer = thrift_client.GetNodeManufacturerName(home_id_signed, node_id)
+	return NodeDetails(home_id, node_id, name, location, product, manufacturer, [])
 
 
-def collect_node_details(home_id, node_id, values, queue):
+def collect_node_details(home_id, node_id, queue):
 	with ozwd_util.get_thrift_client() as thrift_client:
-		details = get_node_details(home_id, node_id, values, thrift_client)
+		details = get_node_details(home_id, node_id, thrift_client)
+		queue.put(details)
+
+
+def collect_value_details(value, queue):
+	with ozwd_util.get_thrift_client() as thrift_client:
+		details = get_value_details(value, thrift_client)
 		queue.put(details)
 
 
@@ -100,23 +107,33 @@ def get_all_nodes_connected(thrift_client, stompy_client):
 			else:
 				break
 
-	by_node_id = lambda value: (value[1]._homeId, value[1]._nodeId)
-	nodes = itertools.groupby(sorted(values, key=by_node_id), by_node_id)
+	by_node_id = lambda value: (ctypes.c_uint32(value[1]._homeId).value, value[1]._nodeId)
+	nodes = list(itertools.groupby(sorted(values, key=by_node_id), by_node_id))
 	return nodes
 
 
 def get_all_node_details(nodes):
-	queue = Queue.Queue()
-	threads = [threading.Thread(target=collect_node_details, args=(home_id, node_id, list(values), queue))
-		for ((home_id, node_id), values) in nodes]
+	node_queue = Queue.Queue()
+	value_queue = Queue.Queue()
+	threads = (
+		[threading.Thread(target=collect_node_details, args=(home_id, node_id, node_queue))
+			for ((home_id, node_id), values) in nodes] +
+		[threading.Thread(target=collect_value_details, args=(value, value_queue))
+			for ((home_id, node_id), values) in nodes
+			for value in values]
+	)
 	for thread in threads:
 		thread.start()
 	for thread in threads:
 		thread.join()
-	details = []
-	while not queue.empty():
-		details.append(queue.get())
-	return details
+	node_details = {}
+	while not node_queue.empty():
+		node = node_queue.get()
+		node_details[(node.home_id, node.node_id)] = node
+	while not value_queue.empty():
+		value = value_queue.get()
+		node_details[(value.home_id, value.node_id)].values.append(value)
+	return node_details.values()
 
 
 def get_all_values():
