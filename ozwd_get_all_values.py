@@ -10,9 +10,11 @@ import notifications
 import OpenZWave.RemoteManager
 import OpenZWave.values
 import ozwd_util
+import Queue
 import spicerack
 import stompy.frame
 import stompy.simple
+import threading
 import time
 
 
@@ -55,7 +57,13 @@ def get_node_details(home_id, node_id, values, thrift_client):
 	return NodeDetails(home_id, node_id, name, location, product, manufacturer, [get_value_details(value, thrift_client) for value in values])
 
 
-def get_all_values_connected(thrift_client, stompy_client):
+def collect_node_details(home_id, node_id, values, queue):
+	with ozwd_util.get_thrift_client() as thrift_client:
+		details = get_node_details(home_id, node_id, values, thrift_client)
+		queue.put(details)
+
+
+def get_all_nodes_connected(thrift_client, stompy_client):
 	# List all the values.
 	thrift_client.SendAllValues()
 
@@ -94,13 +102,30 @@ def get_all_values_connected(thrift_client, stompy_client):
 
 	by_node_id = lambda value: (value[1]._homeId, value[1]._nodeId)
 	nodes = itertools.groupby(sorted(values, key=by_node_id), by_node_id)
-	details = [get_node_details(home_id, node_id, values, thrift_client) for ((home_id, node_id), values) in nodes]
+	return nodes
+
+
+def get_all_node_details(nodes):
+	queue = Queue.Queue()
+	threads = [threading.Thread(target=collect_node_details, args=(home_id, node_id, values, queue))
+		for ((home_id, node_id), values) in nodes]
+	for thread in threads:
+		thread.start()
+	for thread in threads:
+		thread.join()
+	details = []
+	while not queue.empty():
+		details.append(queue.get())
 	return details
+
 
 def get_all_values():
 	with ozwd_util.get_thrift_client() as thrift_client, (
 			ozwd_util.get_stompy_client()) as stompy_client:
-		return get_all_values_connected(thrift_client, stompy_client)
+		nodes = get_all_nodes_connected(thrift_client, stompy_client)
+		# Close the existing thrift client before creating more on child threads
+	return get_all_node_details(nodes)
+
 
 def main():
 	parser = argparse.ArgumentParser(description='List all Z-Wave nodes')
