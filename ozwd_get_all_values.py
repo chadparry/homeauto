@@ -11,6 +11,7 @@ import OpenZWave.RemoteManager
 import OpenZWave.values
 import ozwd_util
 import Queue
+import sortedcontainers
 import spicerack
 import stompy.frame
 import stompy.simple
@@ -23,7 +24,7 @@ ValueDetails = collections.namedtuple('ValueDetails', ['value_id', 'home_id', 'n
 
 
 def get_value_details(value, thrift_client):
-        (packed_value, unpacked_value_id) = value
+	(packed_value, unpacked_value_id) = value
 	safe_value = OpenZWave.RemoteManager.RemoteValueID(
 		unpacked_value_id._homeId,
 		ctypes.c_byte(unpacked_value_id._nodeId).value,
@@ -35,16 +36,16 @@ def get_value_details(value, thrift_client):
 	)
 	label = thrift_client.GetValueLabel(safe_value)
 	return ValueDetails(
-            packed_value,
-            ctypes.c_uint32(unpacked_value_id._homeId).value,
-            unpacked_value_id._nodeId,
-            unpacked_value_id._genre,
-            unpacked_value_id._commandClassId,
-            unpacked_value_id._instance,
-            unpacked_value_id._valueIndex,
-            unpacked_value_id._type,
-            label,
-        )
+		packed_value,
+		ctypes.c_uint32(unpacked_value_id._homeId).value,
+		unpacked_value_id._nodeId,
+		unpacked_value_id._genre,
+		unpacked_value_id._commandClassId,
+		unpacked_value_id._instance,
+		unpacked_value_id._valueIndex,
+		unpacked_value_id._type,
+		label,
+	)
 
 
 def get_node_details(home_id, node_id, thrift_client):
@@ -53,7 +54,8 @@ def get_node_details(home_id, node_id, thrift_client):
 	location = thrift_client.GetNodeLocation(home_id_signed, node_id)
 	product = thrift_client.GetNodeProductName(home_id_signed, node_id)
 	manufacturer = thrift_client.GetNodeManufacturerName(home_id_signed, node_id)
-	return NodeDetails(home_id, node_id, name, location, product, manufacturer, [])
+	return NodeDetails(home_id, node_id, name, location, product, manufacturer,
+		sortedcontainers.SortedList())
 
 
 def collect_node_details(home_id, node_id, queue):
@@ -125,13 +127,13 @@ def get_all_node_details(nodes):
 		thread.start()
 	for thread in threads:
 		thread.join()
-	node_details = {}
+	node_details = sortedcontainers.SortedDict()
 	while not node_queue.empty():
 		node = node_queue.get()
 		node_details[(node.home_id, node.node_id)] = node
 	while not value_queue.empty():
 		value = value_queue.get()
-		node_details[(value.home_id, value.node_id)].values.append(value)
+		node_details[(value.home_id, value.node_id)].values.add(value)
 	return node_details.values()
 
 
@@ -150,6 +152,7 @@ def main():
 	values = get_all_values()
 	for value in values:
 		print(value)
+
 
 if __name__ == "__main__":
 	main()
