@@ -20,13 +20,14 @@ The following Python packages need to be present:
 * astral
 * enum
 * six
+* sortedcontainers
 * stompy
 * thrift
 * tzlocal
 
 For example, these commands get a system ready::
 
-    sudo apt-get install python-enum34 python-pip python-six python-stompy python-thrift rubygems-integration
+    sudo apt-get install python-enum34 python-pip python-six python-sortedcontainers python-stompy python-thrift rubygems-integration
     pip install astral tzlocal
     gem install stompserver
     git clone https://github.com/OpenZWave/python-openzwave.git
@@ -58,3 +59,5 @@ The network can be controlled using these ad-hoc commands:
 * ``ozwd_set_value.py``
 * ``dim.py``
 * ``pulse.py``
+* ``ozwd_set_details.py``
+* ``ozwd_get_all_values.py``
