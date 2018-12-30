@@ -19,7 +19,7 @@ import time
 
 
 NodeDetails = collections.namedtuple('NodeDetails', ['home_id', 'node_id', 'name', 'location', 'product', 'manufacturer', 'values'])
-ValueDetails = collections.namedtuple('ValueDetails', ['value_id', 'home_id', 'node_id', 'genre', 'command_class_id', 'instance', 'value_index', 'type', 'label', 'help_text'])
+ValueDetails = collections.namedtuple('ValueDetails', ['value_id', 'home_id', 'node_id', 'genre', 'command_class_id', 'instance', 'value_index', 'type', 'label'])
 
 
 def get_value_details(value, thrift_client):
@@ -34,7 +34,6 @@ def get_value_details(value, thrift_client):
 		unpacked_value_id._type,
 	)
 	label = thrift_client.GetValueLabel(safe_value)
-	help_text = thrift_client.GetValueHelp(safe_value)
 	return ValueDetails(
             packed_value,
             ctypes.c_uint32(unpacked_value_id._homeId).value,
@@ -45,7 +44,6 @@ def get_value_details(value, thrift_client):
             unpacked_value_id._valueIndex,
             unpacked_value_id._type,
             label,
-            help_text,
         )
 
 
@@ -108,7 +106,8 @@ def get_all_nodes_connected(thrift_client, stompy_client):
 				break
 
 	by_node_id = lambda value: (ctypes.c_uint32(value[1]._homeId).value, value[1]._nodeId)
-	nodes = list(itertools.groupby(sorted(values, key=by_node_id), by_node_id))
+	nodes_lazy = itertools.groupby(sorted(values, key=by_node_id), by_node_id)
+	nodes = [(key, list(values)) for (key, values) in nodes_lazy]
 	return nodes
 
 
