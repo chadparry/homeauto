@@ -70,7 +70,7 @@ def collect_value_details(value, queue):
 		queue.put(details)
 
 
-def get_all_nodes_connected(thrift_client, stompy_client):
+def get_all_nodes_connected(filter_user_genre, thrift_client, stompy_client):
 	# List all the values.
 	thrift_client.SendAllValues()
 
@@ -93,7 +93,8 @@ def get_all_nodes_connected(thrift_client, stompy_client):
 				home_id = int(message.headers['HomeID'], 16)
 				packed_value = int(message.headers['ValueID'], 16)
 				unpacked_value_id = OpenZWave.values.unpackValueID(home_id, packed_value)
-				values.add((packed_value, unpacked_value_id))
+				if not filter_user_genre or unpacked_value_id._genre == OpenZWave.ttypes.RemoteValueGenre.ValueGenre_User:
+					values.add((packed_value, unpacked_value_id))
 			except (KeyError, ValueError):
 				continue
 			# FIXME: Add an event parameter that counts the values so we know when to stop.
@@ -137,19 +138,21 @@ def get_all_node_details(nodes):
 	return node_details.values()
 
 
-def get_all_values():
+def get_all_values(filter_user_genre):
 	with ozwd_util.get_thrift_client() as thrift_client, (
 			ozwd_util.get_stompy_client()) as stompy_client:
-		nodes = get_all_nodes_connected(thrift_client, stompy_client)
+		nodes = get_all_nodes_connected(filter_user_genre, thrift_client, stompy_client)
 		# Close the existing thrift client before creating more on child threads
 	return get_all_node_details(nodes)
 
 
 def main():
 	parser = argparse.ArgumentParser(description='List all Z-Wave nodes')
+	parser.add_argument('--filter-user-genre', action='store_true',
+		help='Only return values in the User genre')
 	args = parser.parse_args()
 
-	values = get_all_values()
+	values = get_all_values(args.filter_user_genre)
 	for value in values:
 		print(value)
 
