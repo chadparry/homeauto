@@ -7,9 +7,6 @@ import OpenZWave.values
 import ozwd_util
 import parsers
 import spicerack
-import thrift.protocol.TBinaryProtocol
-import thrift.transport.TSocket
-import thrift.transport.TTransport
 
 PARSERS = {
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Bool: parsers.interpreted_bool,

@@ -10,9 +10,6 @@ import ozwd_util
 import parsers
 import signal
 import spicerack
-import thrift.protocol.TBinaryProtocol
-import thrift.transport.TSocket
-import thrift.transport.TTransport
 
 REFRESH_TIMEOUT_SEC = 10
 
