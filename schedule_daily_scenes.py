@@ -27,11 +27,10 @@ CHRISTMAS_SWITCHES = [
 	spicerack.Value.GARAGE_OUTLET,
 ]
 NIGHTLIGHT_DIMMERS = {
-	spicerack.Value.FRONT_BEDROOM: None,
-	spicerack.Value.FRONT_FAIRY: None,
-	spicerack.Value.SIDE_BEDROOM: None,
-	spicerack.Value.SIDE_FAIRY: None,
-	spicerack.Value.KIDS_BATHROOM: spicerack.Value.KIDS_BATHROOM_DIMMER_RAMP_TIME,
+	spicerack.Value.JASHERS_BEDROOM: None,
+	spicerack.Value.ALDENS_BEDROOM: None,
+	spicerack.Value.EDENS_BEDROOM: None,
+	spicerack.Value.UPSTAIRS_BATHROOM: spicerack.Value.UPSTAIRS_BATHROOM_DIMMER_RAMP_TIME,
 }
 
 
