@@ -26,7 +26,7 @@ def listen(handler):
 
 				position = ozwd_get_value.get_value_refreshed(value, thrift_client, stompy_client)
 				handler(value, position, thrift_client, stompy_client)
-			except RuntimeError as e:
+			except Exception as e:
 				print(e)
 
 def print_position(value, position, thrift_client, stompy_client):
