@@ -6,13 +6,17 @@ import notifications
 import ozwd_get_value
 import ozwd_util
 import spicerack
+import traceback
 
 def listen(handler):
-	with ozwd_util.get_thrift_client() as thrift_client, (
-			ozwd_util.get_stompy_client()) as stompy_client:
+	with ozwd_util.get_stompy_client(ozwd_util.STOMP_TOPIC) as stompy_client:
 		while True:
 			try:
 				message = stompy_client.get()
+				# Allow other clients to process this message
+				rebound_headers = message.headers.copy()
+				rebound_headers.pop('destination', None)
+				stompy_client.put(message.body, ozwd_util.STOMP_REBOUND_TOPIC, False, rebound_headers)
 
 				message_type = notifications.NotificationType(
 						int(message.headers['NotificationType'], 16))
@@ -24,12 +28,13 @@ def listen(handler):
 				except (KeyError, ValueError):
 					continue
 
-				position = ozwd_get_value.get_value_refreshed(value, thrift_client, stompy_client)
-				handler(value, position, thrift_client, stompy_client)
+				with ozwd_util.get_thrift_client() as thrift_client:
+					position = ozwd_get_value.get_value_refreshed(value, thrift_client)
+				handler(value, position, stompy_client)
 			except Exception as e:
-				print(e)
+				traceback.print_exc()
 
-def print_position(value, position, thrift_client, stompy_client):
+def print_position(value, position, stompy_client):
 	try:
 		name = spicerack.Value(value).name
 	except ValueError:

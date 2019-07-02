@@ -7,6 +7,7 @@ import thrift.transport.TSocket
 import thrift.transport.TTransport
 
 STOMP_TOPIC = '/topic/zwave/monitor'
+STOMP_REBOUND_TOPIC = '/topic/zwave-rebound'
 
 @contextlib.contextmanager
 def get_thrift_client():
@@ -36,8 +37,8 @@ def stompy_subscription(client, destination, ack='auto', conf=None):
 		client.unsubscribe(destination, conf)
 
 @contextlib.contextmanager
-def get_stompy_client():
+def get_stompy_client(topic=STOMP_REBOUND_TOPIC):
 	stomp = stompy.simple.Client(host=spicerack.OZWD_HOST, port=spicerack.STOMPY_PORT)
 	with stompy_connection(stomp):
-		with stompy_subscription(stomp, STOMP_TOPIC):
+		with stompy_subscription(stomp, topic):
 			yield stomp

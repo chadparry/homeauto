@@ -63,9 +63,9 @@ def get_value_connected(value, thrift_client, stompy_client):
 	finally:
 		signal.alarm(0)
 
-	return get_value_refreshed(value, thrift_client, stompy_client)
+	return get_value_refreshed(value, thrift_client)
 
-def get_value_refreshed(value, thrift_client, stompy_client):
+def get_value_refreshed(value, thrift_client):
 	unpacked_value_id = OpenZWave.values.unpackValueID(spicerack.HOME_ID, value)
 	getter = GETTERS[unpacked_value_id._type]
 	result = getter(thrift_client, unpacked_value_id)
