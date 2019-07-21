@@ -10,6 +10,8 @@ TRIGGERS = {
 	(spicerack.Value.MASTER_WINDOWSIDE_NIGHTSTAND, False): [(spicerack.Value.MASTER_WALLSIDE_NIGHTSTAND, False)],
 	(spicerack.Value.STUDY, True): [(spicerack.Value.STUDY_LAMP, 99)],
 	(spicerack.Value.STUDY, False): [(spicerack.Value.STUDY_LAMP, 0)],
+	(spicerack.Value.LIVING_ROOM, True): [(spicerack.Value.LIVING_ROOM_LAMP, 99)],
+	(spicerack.Value.LIVING_ROOM, False): [(spicerack.Value.LIVING_ROOM_LAMP, 0)],
 }
 
 def match_scenes(value, position, stompy_client):
