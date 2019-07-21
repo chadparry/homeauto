@@ -6,6 +6,8 @@ import notifications
 import ozwd_get_value
 import ozwd_util
 import spicerack
+import stompy.frame
+import struct
 import traceback
 
 def listen(handler):
@@ -31,6 +33,12 @@ def listen(handler):
 				with ozwd_util.get_thrift_client() as thrift_client:
 					position = ozwd_get_value.get_value_refreshed(value, thrift_client)
 				handler(value, position, stompy_client)
+			except stompy.frame.UnknownBrokerResponseError:
+				# The queue may be corrupt
+				raise
+			except struct.error:
+				# A message may be corrupt
+				pass
 			except Exception as e:
 				traceback.print_exc()
 
