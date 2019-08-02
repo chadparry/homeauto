@@ -20,8 +20,8 @@ def listen(handler):
 				rebound_headers.pop('destination', None)
 				stompy_client.put(message.body, ozwd_util.STOMP_REBOUND_TOPIC, False, rebound_headers)
 
-				message_type = notifications.NotificationType(
-						int(message.headers['NotificationType'], 16))
+				notification_type = message.headers.get('NotificationType')
+				message_type = notifications.NotificationType(int(notification_type, 16)) if notification_type else None
 				if message_type != notifications.NotificationType.ValueChanged:
 					#print(message)
 					continue
