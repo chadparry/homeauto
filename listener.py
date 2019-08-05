@@ -5,6 +5,7 @@ from __future__ import print_function
 import notifications
 import ozwd_get_value
 import ozwd_util
+import socket
 import spicerack
 import stompy.frame
 import struct
@@ -36,6 +37,9 @@ def listen(handler):
 			except stompy.frame.UnknownBrokerResponseError:
 				# The queue may be corrupt
 				raise
+			except socket.error:
+				# A channel may be closed
+				pass
 			except struct.error:
 				# A message may be corrupt
 				pass
