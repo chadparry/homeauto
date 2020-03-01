@@ -133,6 +133,17 @@ def main():
 	for (dimmer, dimmer_ramp_time_value) in NIGHTLIGHT_DIMMERS.iteritems():
 		schedule_nightlight(dimmer, today, args.dry_run, dimmer_ramp_time_value)
 
+	if today.weekday() in {
+		calendar_util.DayOfWeek.MONDAY.value,
+		calendar_util.DayOfWeek.TUESDAY.value,
+		calendar_util.DayOfWeek.THURSDAY.value,
+		calendar_util.DayOfWeek.FRIDAY.value,
+	}:
+		at.schedule(
+			datetime.datetime.combine(today, datetime.time(7)),
+			[OZWD_SET_VALUE_BIN, '--value={}'.format(shlex_quote(spicerack.Value.EDENS_BEDROOM.name)), '--position=on'],
+			args.dry_run)
+
 
 if __name__ == "__main__":
 	main()
