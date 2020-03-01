@@ -6,8 +6,8 @@ import ozwd_util
 import spicerack
 
 TRIGGERS = {
-	(spicerack.Value.MASTER_WINDOWSIDE_NIGHTSTAND, True): [(spicerack.Value.MASTER_WALLSIDE_NIGHTSTAND, True)],
-	(spicerack.Value.MASTER_WINDOWSIDE_NIGHTSTAND, False): [(spicerack.Value.MASTER_WALLSIDE_NIGHTSTAND, False)],
+	(spicerack.Value.MASTER_WINDOWSIDE_NIGHTSTAND, True): [(spicerack.Value.MASTER_WALLSIDE_NIGHTSTAND, True), (spicerack.Value.MASTER_LAMP, True)],
+	(spicerack.Value.MASTER_WINDOWSIDE_NIGHTSTAND, False): [(spicerack.Value.MASTER_WALLSIDE_NIGHTSTAND, False), (spicerack.Value.MASTER_LAMP, False)],
 	(spicerack.Value.STUDY, True): [(spicerack.Value.STUDY_LAMP, 99)],
 	(spicerack.Value.STUDY, False): [(spicerack.Value.STUDY_LAMP, 0)],
 	(spicerack.Value.LIVING_ROOM, True): [(spicerack.Value.LIVING_ROOM_LAMP, 99)],
