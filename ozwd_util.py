@@ -1,5 +1,6 @@
 import contextlib
 import OpenZWave.RemoteManager
+import socket
 import spicerack
 import stompy.simple
 import thrift.protocol.TBinaryProtocol
@@ -27,7 +28,11 @@ def stompy_connection(client, username=None, password=None, clientid=None):
 	try:
 		yield client.connect(username, password, clientid)
 	finally:
-		client.disconnect()
+		try:
+			client.disconnect()
+		except socket.error:
+			# A channel may be closed
+			pass
 
 @contextlib.contextmanager
 def stompy_subscription(client, destination, ack='auto', conf=None):

@@ -18,6 +18,7 @@ GETTERS = {
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Byte: OpenZWave.RemoteManager.Client.GetValueAsByte,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Decimal: OpenZWave.RemoteManager.Client.GetValueAsFloat,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Int: OpenZWave.RemoteManager.Client.GetValueAsInt,
+	OpenZWave.RemoteManager.RemoteValueType.ValueType_List: OpenZWave.RemoteManager.Client.GetValueListItems,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Short: OpenZWave.RemoteManager.Client.GetValueAsShort,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_String: OpenZWave.RemoteManager.Client.GetValueAsString,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Button: OpenZWave.RemoteManager.Client.GetValueAsBool,

@@ -13,7 +13,7 @@ PARSERS = {
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Byte: parsers.interpreted_int,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Decimal: float,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Int: parsers.interpreted_int,
-	OpenZWave.RemoteManager.RemoteValueType.ValueType_List: str,
+	OpenZWave.RemoteManager.RemoteValueType.ValueType_List: parsers.comma_delimited,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Short: parsers.interpreted_int,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_String: str,
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Button: parsers.interpreted_bool,

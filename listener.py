@@ -9,13 +9,17 @@ import socket
 import spicerack
 import stompy.frame
 import struct
+import time
 import traceback
 
+
 def listen(handler):
-	with ozwd_util.get_stompy_client(ozwd_util.STOMP_TOPIC) as stompy_client:
+	with ozwd_util.get_thrift_client() as thrift_client, (
+			ozwd_util.get_stompy_client(ozwd_util.STOMP_TOPIC)) as stompy_client:
 		while True:
 			try:
 				message = stompy_client.get()
+				#print(repr(message))
 				# Allow other clients to process this message
 				rebound_headers = message.headers.copy()
 				rebound_headers.pop('destination', None)
@@ -31,12 +35,11 @@ def listen(handler):
 				except (KeyError, ValueError):
 					continue
 
-				with ozwd_util.get_thrift_client() as thrift_client:
-					position = ozwd_get_value.get_value_refreshed(value, thrift_client)
-				handler(value, position, stompy_client)
+				position = ozwd_get_value.get_value_refreshed(value, thrift_client)
+				handler(value, position, thrift_client, stompy_client)
 			except stompy.frame.UnknownBrokerResponseError:
 				# The queue may be corrupt
-				raise
+				time.sleep(1)
 			except socket.error:
 				# A channel may be closed
 				pass
@@ -46,15 +49,18 @@ def listen(handler):
 			except Exception as e:
 				traceback.print_exc()
 
-def print_position(value, position, stompy_client):
+
+def print_position(value, position, thrift_client, stompy_client):
 	try:
 		name = spicerack.Value(value).name
 	except ValueError:
 		name = hex(value)
 	print(name, position)
 
+
 def main():
 	listen(print_position)
+
 
 if __name__ == "__main__":
 	main()

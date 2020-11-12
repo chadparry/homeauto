@@ -16,3 +16,6 @@ def interpreted_bool(x):
 		'1': True,
 	}
 	return values[x]
+
+def comma_delimited(x):
+	return x.split(',')
