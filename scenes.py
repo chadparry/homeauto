@@ -49,7 +49,7 @@ TRIGGERS = {
 }
 
 
-def match_scenes(value, thrift_client, stompy_client):
+def match_scenes(value, stompy_client):
 	try:
 		name = spicerack.Value(value)
 	except ValueError:
@@ -57,13 +57,14 @@ def match_scenes(value, thrift_client, stompy_client):
 
 	value_triggers = TRIGGERS.get(name, {})
 	if value_triggers:
-		position = ozwd_get_value.get_value_refreshed(value, thrift_client)
-		matching_triggers = itertools.chain(
-			value_triggers.get(position, []),
-			value_triggers.get(None, []),
-		)
-		for trigger in matching_triggers:
-			trigger.handle(name, position, thrift_client)
+		with ozwd_util.get_thrift_client() as thrift_client:
+			position = ozwd_get_value.get_value_refreshed(value, thrift_client)
+			matching_triggers = itertools.chain(
+				value_triggers.get(position, []),
+				value_triggers.get(None, []),
+			)
+			for trigger in matching_triggers:
+				trigger.handle(name, position, thrift_client)
 
 
 def main():
