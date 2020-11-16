@@ -71,7 +71,7 @@ def get_value_refreshed(value, thrift_client):
 	getter = GETTERS[unpacked_value_id._type]
 	result = getter(thrift_client, unpacked_value_id)
 	if not result.retval:
-		raise RuntimeError('Failed to get value')
+		raise RuntimeError('Failed to get value: ' + str(unpacked_value_id))
 	return result.o_value
 
 def get_value(value):

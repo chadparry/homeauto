@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import notifications
+import OpenZWave.ttypes
 import ozwd_get_value
 import ozwd_util
 import socket
@@ -34,9 +35,12 @@ def listen(handler):
 					value = int(message.headers['ValueID'], 16)
 				except (KeyError, ValueError):
 					continue
+				unpacked_value_id = OpenZWave.values.unpackValueID(spicerack.HOME_ID, value)
+				if unpacked_value_id._genre != OpenZWave.ttypes.RemoteValueGenre.ValueGenre_User:
+					#print(message)
+					continue
 
-				position = ozwd_get_value.get_value_refreshed(value, thrift_client)
-				handler(value, position, thrift_client, stompy_client)
+				handler(value, thrift_client, stompy_client)
 			except stompy.frame.UnknownBrokerResponseError:
 				# The queue may be corrupt
 				time.sleep(1)
@@ -50,11 +54,12 @@ def listen(handler):
 				traceback.print_exc()
 
 
-def print_position(value, position, thrift_client, stompy_client):
+def print_position(value, thrift_client, stompy_client):
 	try:
 		name = spicerack.Value(value).name
 	except ValueError:
 		name = hex(value)
+	position = ozwd_get_value.get_value_refreshed(value, thrift_client)
 	print(name, position)
 
 

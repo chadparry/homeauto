@@ -8,6 +8,7 @@ import ctypes
 import itertools
 import notifications
 import OpenZWave.RemoteManager
+import OpenZWave.ttypes
 import OpenZWave.values
 import ozwd_util
 import Queue

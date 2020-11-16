@@ -4,9 +4,10 @@ import collections
 import fcntl
 import itertools
 import listener
+import ozwd_get_value
 import ozwd_set_value
 import ozwd_util
-#import slow_dim
+import slow_dim
 import spicerack
 
 
@@ -24,36 +25,45 @@ class SlowDimUpstairsBathroomAction:
 
 
 TRIGGERS = {
-	(spicerack.Value.MASTER_TRIGGER, True): [
-		SetAction(spicerack.Value.MASTER_WINDOWSIDE_NIGHTSTAND, 99),
-		SetAction(spicerack.Value.MASTER_WALLSIDE_NIGHTSTAND, 99),
-		SetAction(spicerack.Value.MASTER_LAMP, True),
-	],
-	(spicerack.Value.MASTER_TRIGGER, False): [
-		SetAction(spicerack.Value.MASTER_WINDOWSIDE_NIGHTSTAND, 0),
-		SetAction(spicerack.Value.MASTER_WALLSIDE_NIGHTSTAND, 0),
-		SetAction(spicerack.Value.MASTER_LAMP, False),
-	],
-	(spicerack.Value.STUDY, True): [SetAction(spicerack.Value.STUDY_LAMP, 99)],
-	(spicerack.Value.STUDY, False): [SetAction(spicerack.Value.STUDY_LAMP, 0)],
-	(spicerack.Value.LIVING_ROOM, True): [SetAction(spicerack.Value.LIVING_ROOM_LAMP, 99)],
-	(spicerack.Value.LIVING_ROOM, False): [SetAction(spicerack.Value.LIVING_ROOM_LAMP, 0)],
-	(spicerack.Value.UPSTAIRS_BATHROOM,): [SlowDimUpstairsBathroomAction()],
+	spicerack.Value.MASTER_TRIGGER: {
+		True: [
+			SetAction(spicerack.Value.MASTER_WINDOWSIDE_NIGHTSTAND, 99),
+			SetAction(spicerack.Value.MASTER_WALLSIDE_NIGHTSTAND, 99),
+			SetAction(spicerack.Value.MASTER_LAMP, True),
+		],
+		False: [
+			SetAction(spicerack.Value.MASTER_WINDOWSIDE_NIGHTSTAND, 0),
+			SetAction(spicerack.Value.MASTER_WALLSIDE_NIGHTSTAND, 0),
+			SetAction(spicerack.Value.MASTER_LAMP, False),
+		],
+	},
+	spicerack.Value.STUDY: {
+		True: [SetAction(spicerack.Value.STUDY_LAMP, 99)],
+		False: [SetAction(spicerack.Value.STUDY_LAMP, 0)],
+	},
+	#(spicerack.Value.LIVING_ROOM, True): [SetAction(spicerack.Value.LIVING_ROOM_LAMP, 99)],
+	#(spicerack.Value.LIVING_ROOM, False): [SetAction(spicerack.Value.LIVING_ROOM_LAMP, 0)],
+	spicerack.Value.UPSTAIRS_BATHROOM: {
+		None: [SlowDimUpstairsBathroomAction()],
+	},
 }
 
 
-def match_scenes(value, position, thrift_client, stompy_client):
+def match_scenes(value, thrift_client, stompy_client):
 	try:
 		name = spicerack.Value(value)
 	except ValueError:
 		return
 
-	triggers = itertools.chain(
-		TRIGGERS.get((name, position), []),
-		TRIGGERS.get((name,), []),
-	)
-	for trigger in triggers:
-		trigger.handle(name, position, thrift_client)
+	value_triggers = TRIGGERS.get(name, {})
+	if value_triggers:
+		position = ozwd_get_value.get_value_refreshed(value, thrift_client)
+		matching_triggers = itertools.chain(
+			value_triggers.get(position, []),
+			value_triggers.get(None, []),
+		)
+		for trigger in matching_triggers:
+			trigger.handle(name, position, thrift_client)
 
 
 def main():

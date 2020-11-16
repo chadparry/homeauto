@@ -35,7 +35,7 @@ def set_value_connected(value, position, thrift_client):
 	setter = SETTERS[unpacked_value_id._type]
 	success = setter(thrift_client, unpacked_value_id, position)
 	if not success:
-		raise RuntimeError('Failed to set value')
+		raise RuntimeError('Failed to set value:' + str(unpacked_value_id))
 
 def set_value(value, position):
 	with ozwd_util.get_thrift_client() as thrift_client:
