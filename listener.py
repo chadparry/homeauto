@@ -15,8 +15,7 @@ import traceback
 
 
 def listen(handler):
-	with ozwd_util.get_thrift_client() as thrift_client, (
-			ozwd_util.get_stompy_client(ozwd_util.STOMP_TOPIC)) as stompy_client:
+	with ozwd_util.get_stompy_client(ozwd_util.STOMP_TOPIC) as stompy_client:
 		while True:
 			try:
 				message = stompy_client.get()
@@ -40,7 +39,7 @@ def listen(handler):
 					#print(message)
 					continue
 
-				handler(value, thrift_client, stompy_client)
+				handler(value, stompy_client)
 			except stompy.frame.UnknownBrokerResponseError:
 				# The queue may be corrupt
 				time.sleep(1)
@@ -54,12 +53,13 @@ def listen(handler):
 				traceback.print_exc()
 
 
-def print_position(value, thrift_client, stompy_client):
+def print_position(value, stompy_client):
 	try:
 		name = spicerack.Value(value).name
 	except ValueError:
 		name = hex(value)
-	position = ozwd_get_value.get_value_refreshed(value, thrift_client)
+	with ozwd_util.get_thrift_client() as thrift_client:
+		position = ozwd_get_value.get_value_refreshed(value, thrift_client)
 	print(name, position)
 
 
