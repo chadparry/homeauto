@@ -3,12 +3,12 @@
 import collections
 import fcntl
 import itertools
-import listener
-import ozwd_get_value
-import ozwd_set_value
-import ozwd_util
-import slow_dim
-import spicerack
+from . import listener
+from . import ozwd_get_value
+from . import ozwd_set_value
+from . import ozwd_util
+from . import slow_dim
+from . import spicerack
 
 
 class SetAction:

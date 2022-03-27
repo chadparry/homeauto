@@ -1,4 +1,4 @@
-import autonumber
+from . import autonumber
 
 @autonumber.unique
 class NotificationType(autonumber.AutoNumber):

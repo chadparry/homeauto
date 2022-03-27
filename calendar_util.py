@@ -1,4 +1,4 @@
-import autonumber
+from . import autonumber
 import calendar
 import datetime
 import ephem

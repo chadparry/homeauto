@@ -4,9 +4,9 @@ import argparse
 import contextlib
 import OpenZWave.RemoteManager
 import OpenZWave.values
-import ozwd_util
-import parsers
-import spicerack
+from . import ozwd_util
+from . import parsers
+from . import spicerack
 
 PARSERS = {
 	OpenZWave.RemoteManager.RemoteValueType.ValueType_Bool: parsers.interpreted_bool,

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+
 
 import argparse
-import notifications
+from . import notifications
 import OpenZWave.RemoteManager
 import OpenZWave.values
-import ozwd_util
-import parsers
+from . import ozwd_util
+from . import parsers
 import signal
-import spicerack
+from . import spicerack
 
 REFRESH_TIMEOUT_SEC = 10
 

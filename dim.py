@@ -2,11 +2,11 @@
 
 import argparse
 import OpenZWave.values
-import ozwd_get_value
-import ozwd_set_value
-import ozwd_util
-import parsers
-import spicerack
+from . import ozwd_get_value
+from . import ozwd_set_value
+from . import ozwd_util
+from . import parsers
+from . import spicerack
 import sys
 
 def dim(value, position, filter_min, filter_max,

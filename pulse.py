@@ -2,12 +2,12 @@
 
 import argparse
 import OpenZWave.values
-import ozwd_get_value
-import ozwd_set_value
-import ozwd_util
+from . import ozwd_get_value
+from . import ozwd_set_value
+from . import ozwd_util
 from six.moves import range
-import parsers
-import spicerack
+from . import parsers
+from . import spicerack
 import time
 
 def pulse(value, dimmer_ramp_time_value=None):

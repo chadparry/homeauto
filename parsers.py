@@ -2,7 +2,7 @@ def get_enum_parser(type):
 	def interpreted_value(x):
 		if hasattr(type, x):
 			return type[x].value
-		return long(x, 0)
+		return int(x, 0)
 	return interpreted_value
 
 def interpreted_int(x):

@@ -2,10 +2,10 @@
 
 import datetime
 import logging
-import notifications
+from . import notifications
 import OpenZWave.values
-import ozwd_util
-import spicerack
+from . import ozwd_util
+from . import spicerack
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

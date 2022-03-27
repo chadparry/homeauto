@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+
 
 import argparse
 import collections
 import ctypes
 import itertools
-import notifications
+from . import notifications
 import OpenZWave.RemoteManager
 import OpenZWave.ttypes
 import OpenZWave.values
-import ozwd_util
-import Queue
+from . import ozwd_util
+import queue
 import sortedcontainers
-import spicerack
+from . import spicerack
 import stompy.frame
 import stompy.simple
 import threading
@@ -116,8 +116,8 @@ def get_all_nodes_connected(filter_user_genre, thrift_client, stompy_client):
 
 
 def get_all_node_details(nodes):
-	node_queue = Queue.Queue()
-	value_queue = Queue.Queue()
+	node_queue = queue.Queue()
+	value_queue = queue.Queue()
 	threads = (
 		[threading.Thread(target=collect_node_details, args=(home_id, node_id, node_queue))
 			for ((home_id, node_id), values) in nodes] +
@@ -136,7 +136,7 @@ def get_all_node_details(nodes):
 	while not value_queue.empty():
 		value = value_queue.get()
 		node_details[(value.home_id, value.node_id)].values.add(value)
-	return node_details.values()
+	return list(node_details.values())
 
 
 def get_all_values(filter_user_genre):

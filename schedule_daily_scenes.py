@@ -2,13 +2,13 @@
 
 import argparse
 import astral
-import at
-import calendar_util
+from . import at
+from . import calendar_util
 import datetime
 import logging
 from six.moves import shlex_quote
-import spicerack
-import variates
+from . import spicerack
+from . import variates
 
 
 # TODO: Move these scripts to a permanent location.
@@ -130,7 +130,7 @@ def main():
 			today <= calendar_util.get_new_years(today.year)):
 		for switch in CHRISTMAS_SWITCHES:
 			schedule_switch(switch, today, args.dry_run)
-	for (dimmer, dimmer_ramp_time_value) in NIGHTLIGHT_DIMMERS.iteritems():
+	for (dimmer, dimmer_ramp_time_value) in NIGHTLIGHT_DIMMERS.items():
 		schedule_nightlight(dimmer, today, args.dry_run, dimmer_ramp_time_value)
 
 	if today.weekday() in {

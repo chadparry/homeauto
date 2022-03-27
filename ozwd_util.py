@@ -1,7 +1,7 @@
 import contextlib
 import OpenZWave.RemoteManager
 import socket
-import spicerack
+from . import spicerack
 import stompy.simple
 import thrift.protocol.TBinaryProtocol
 import thrift.transport.TSocket

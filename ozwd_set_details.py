@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+
 
 import argparse
 import OpenZWave.values
-import ozwd_util
-import parsers
-import spicerack
+from . import ozwd_util
+from . import parsers
+from . import spicerack
 
 
 def set_details_connected(value, name, location, thrift_client):
